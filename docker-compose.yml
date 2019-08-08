@@ -1,0 +1,36 @@
+version: '3.1'
+
+services:
+  php:
+    build:
+      context: .
+    volumes:
+      - .:/usr/src/doctrine-vs-pdo
+    working_dir: /usr/src/doctrine-vs-pdo
+    command: php index.php
+    environment:
+      - XDEBUG_CONFIG=remote_enable=ON remote_host=172.17.0.1
+      - PHP_IDE_CONFIG=serverName=dbalvspdo
+    depends_on:
+      - pdo
+      - dbal
+
+  pdo:
+    image: mariadb
+    ports:
+      - "28000:3306"
+    environment:
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+
+  dbal:
+    image: mariadb
+    ports:
+      - "28001:3306"
+    environment:
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password

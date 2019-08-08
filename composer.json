@@ -1,0 +1,15 @@
+{
+    "name": "erikvv/doctrine-vs-pdo",
+    "description": "Comparison of database abstraction layers",
+    "type": "project",
+    "require": {
+        "doctrine/dbal": "^2.9",
+        "ext-pdo": "*"
+    },
+    "authors": [
+        {
+            "name": "Erik van Velzen",
+            "email": "erik@evanv.nl"
+        }
+    ]
+}
