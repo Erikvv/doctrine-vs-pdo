@@ -15,15 +15,13 @@ $password = 'password';
 $pdo = new PDO("mysql:host=pdo;dbname=$db", $username, $password);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// to re-use existing PDO connection
-//$pdo2 = new PDO("mysql:host=dbal;dbname=$db", $username, $password);
-//$dbal = DriverManager::getConnection([
-//  'pdo' => $pdo2,
-//  'platform' => new MariaDb1027Platform(),
-//]);
+$dbal1 = DriverManager::getConnection([
+  'pdo' => $pdo,
+  'platform' => new MariaDb1027Platform(),
+]);
 
 // less error-prone way to initialize
-$dbal = DriverManager::getConnection([
+$dbal2 = DriverManager::getConnection([
      'dbname'   => $db,
      'user'     => $username,
      'password' => $password,
@@ -31,57 +29,27 @@ $dbal = DriverManager::getConnection([
      'driver'   => 'pdo_mysql',
 ]);
 
-// DROP TABLE
-$pdo->exec('DROP TABLE IF EXISTS animals');
-$dbal->exec('DROP TABLE IF EXISTS animals');
+$dbal1->exec('DROP TABLE IF EXISTS animals');
+$dbal2->exec('DROP TABLE IF EXISTS animals');
 
-// CREATE TABLE
-$pdo->exec('
+$dbal1->exec('
+    CREATE TABLE animals (
+        name VARCHAR(255) PRIMARY KEY
+    )
+');
+$dbal2->exec('
     CREATE TABLE animals (
         name VARCHAR(255) PRIMARY KEY
     )
 ');
 
-$dbal->exec('
-    CREATE TABLE animals (
-        name VARCHAR(255) PRIMARY KEY
-    )
-');
-
-// INSERT
-$pdoStatement = $pdo->prepare('INSERT INTO animals (name) VALUES (:name)');
-$pdoStatement->bindValue(':name', 'Giraffe');
-$pdoStatement->execute();
-
-$dbalStatement = $dbal->prepare('INSERT INTO animals (name) VALUES (:name)');
-$dbalStatement->bindValue(':name', 'Giraffe');
-$dbalStatement->execute();
-
-// SELECT
-$pdoStatement = $pdo->query('SELECT * FROM animals');
-print_r($pdoStatement->fetchAll(PDO::FETCH_ASSOC));
-
-$dbalStatement = $dbal->query('SELECT * FROM animals');
-print_r($dbalStatement->fetchAll(PDO::FETCH_ASSOC));
-
-// continue after unique constraint violation
 try {
-    $pdoStatement = $pdo->prepare('INSERT INTO animals (name) VALUES (:name)');
-    $pdoStatement->bindValue(':name', 'Giraffe');
-    $pdoStatement->execute();
-} catch (\PDOException $e) {
-    // can't rely on error code
-    // only works for mariadb or compatible
-    if (0 !== strpos($e->getMessage(), 'SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry')) {
-        throw $e;
-    }
-    // continue
-}
+    $dbal1->exec('INSERT INTO animals (name) VALUES ("Giraffe"), ("Giraffe")');
+} catch (\Throwable $e1) {}
 
 try {
-    $dbalStatement = $dbal->prepare('INSERT INTO animals (name) VALUES (:name)');
-    $dbalStatement->bindValue(':name', 'Giraffe');
-    $dbalStatement->execute();
-} catch (UniqueConstraintViolationException $e) {
-    // continue
-}
+    $dbal2->exec('INSERT INTO animals (name) VALUES ("Giraffe"), ("Giraffe")');
+} catch (\Throwable $e2) {}
+
+echo get_class($e1) . "\n";
+echo get_class($e2) . "\n";
